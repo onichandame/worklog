@@ -1,25 +1,42 @@
-import React from "react";
-import logo from "./logo.svg";
+import React, { FC, useState, useReducer } from 'react'
+import { makeStyles } from '@material-ui/core/styles'
+import { useIpfs } from 'react-ipfs-hook'
 
-function App() {
+import { Ipfs, External, ExternalUrl } from './context'
+import { NavBar, Workspace } from './components'
+
+const useStyles = makeStyles(theme => ({
+  root: {
+    flexGrow: 1,
+    backgroundColor: theme.palette.background.paper,
+  },
+}))
+
+const App: FC = () => {
+  const styles = useStyles()
+  const [externalUrl, setExternalUrl] = useState<string>(
+    `http://localhost:5001`
+  )
+  const [external, toggleExternal] = useReducer(old => !old, true)
+  const [ipfs, ipfsErr] = useIpfs({ external, opts: externalUrl })
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <ExternalUrl.Provider value={{ externalUrl, setExternalUrl }}>
+      <External.Provider value={{ toggleExternal, external }}>
+        <Ipfs.Provider value={{ ipfs, ipfsErr }}>
+          <div className={styles.root}>
+            <NavBar />
+            {ipfsErr ? (
+              ipfsErr.message
+            ) : ipfs ? (
+              <Workspace />
+            ) : (
+              `ipfs not loaded`
+            )}
+          </div>
+        </Ipfs.Provider>
+      </External.Provider>
+    </ExternalUrl.Provider>
+  )
 }
 
-export default App;
+export default App
