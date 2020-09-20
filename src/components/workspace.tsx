@@ -21,7 +21,11 @@ export const Workspace: FC = () => {
   const [dbErr, setDbErr] = useState<Error | null>(null)
   const [list, setList] = useState<object[]>([])
   const { ipfs, ipfsErr } = useContext(Ipfs)
-  const closeDb = async () => db?.close()
+  const closeDb = async () => {
+    await db?.close()
+    setDb(null)
+    setDbErr(null)
+  }
   const openDb = async () => {
     if (ipfs && !ipfsErr) {
       try {
@@ -43,7 +47,7 @@ export const Workspace: FC = () => {
   const insertLog = async () => {
     try {
       const collection = await db?.initCollection(col)
-      if (collection) {
+      if (ipfs && db && collection) {
         await collection.insertOne({ log } as any)
       }
     } catch (e) {
@@ -105,11 +109,29 @@ export const Workspace: FC = () => {
             insertLog().then(() => updateList())
           }}
         >
-          <TextField onChange={e => setLog(e.currentTarget.value)} />
+          <TextField
+            placeholder="new message"
+            onChange={e => setLog(e.currentTarget.value)}
+          />
           <Button variant="contained" type="submit">
             add
           </Button>
         </form>
+        <Grid item>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={async () => {
+              const collection = await db?.initCollection(col)
+              if (ipfs && db && collection) {
+                await collection.drop()
+              }
+              await updateList()
+            }}
+          >
+            clear
+          </Button>
+        </Grid>
       </Grid>
     </Grid>
   )
