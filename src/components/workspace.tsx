@@ -1,104 +1,65 @@
-import React, { useContext, FC, useState, useReducer } from 'react'
+import React, { useCallback, useEffect, useContext, FC, useState } from 'react'
 import AvionDb from 'aviondb'
-import {
-  Button,
-  Grid,
-  TextField,
-  Switch,
-  FormGroup,
-  FormControlLabel,
-} from '@material-ui/core'
+import { Button, Grid, TextField } from '@material-ui/core'
 
 import { Ipfs } from '../context'
 
+const addr = `test`
 const col = `worklogs`
 
 export const Workspace: FC = () => {
   const [log, setLog] = useState(``)
-  const [addr, setAddr] = useState<string>(``)
-  const [remote, toggleRemote] = useReducer(old => !old, false)
-  const [db, setDb] = useState<AvionDb | null>(null)
-  const [dbErr, setDbErr] = useState<Error | null>(null)
   const [list, setList] = useState<object[]>([])
+  const [db, setDb] = useState<string>(``)
+  const [updating, setUpdating] = useState(false)
   const { ipfs, ipfsErr } = useContext(Ipfs)
-  const closeDb = async () => {
-    await db?.close()
-    setDb(null)
-    setDbErr(null)
-  }
-  const openDb = async () => {
-    if (ipfs && !ipfsErr) {
-      try {
-        if (remote) setDb(await AvionDb.open(addr, ipfs))
-        else setDb(await AvionDb.init(addr, ipfs))
-        setDbErr(null)
-      } catch (e) {
-        setDb(null)
-        setDbErr(e)
-      }
-    }
-  }
+  const openDb = useCallback(async () => {
+    if (ipfs && !ipfsErr) return AvionDb.init(addr, ipfs)
+  }, [ipfs, ipfsErr])
   const updateList = async () => {
+    setUpdating(true)
+    const db = await openDb()
     const collection = await db?.initCollection(col)
     if (collection) {
       setList(await collection.find({}))
     }
+    setUpdating(false)
   }
   const insertLog = async () => {
     try {
+      console.log(`inserting`)
+      const db = await openDb()
+      console.log(`db opened`)
       const collection = await db?.initCollection(col)
-      if (ipfs && db && collection) {
-        await collection.insertOne({ log } as any)
-      }
+      console.log(`collection opened`)
+      if (collection) await collection.insertOne({ log } as any)
+      console.log(`inserted`)
     } catch (e) {
       console.error(`insert failed`)
       console.error(e)
     }
   }
+  useEffect(() => {
+    const timer = setInterval(async () => {
+      const db = await openDb()
+      if (db) setDb(`${db.address.root}/${db.address.path}`)
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [openDb])
   return (
     <Grid container direction="column">
-      <Grid item>
-        <form
-          onSubmit={e => {
-            e.preventDefault()
-            closeDb()
-              .then(() => openDb())
-              .then(() => updateList())
-          }}
-        >
-          <FormGroup row>
-            <TextField
-              placeholder="db name/address"
-              onChange={e => setAddr(e.currentTarget.value)}
-            />
-          </FormGroup>
-          <FormGroup row>
-            <FormControlLabel
-              control={
-                <Switch checked={remote} onChange={() => toggleRemote()} />
-              }
-              label="import from remote"
-            />
-          </FormGroup>
-          <Button type="submit" variant="contained">
-            open
-          </Button>
-        </form>
-      </Grid>
-      <Grid item>
-        {dbErr
-          ? dbErr.message
-          : db
-          ? `${db.address.root}/${db.address.path}`
-          : `db not loaded`}
-      </Grid>
+      <Grid item>{db}</Grid>
       <Grid item>
         {list.map(item => (
           <div>{JSON.stringify(item)}</div>
         ))}
       </Grid>
       <Grid item>
-        <Button onClick={() => updateList()} variant="contained">
+        <Button
+          disabled={updating}
+          onClick={() => updateList()}
+          variant="contained"
+        >
           update
         </Button>
       </Grid>
@@ -122,8 +83,9 @@ export const Workspace: FC = () => {
             variant="contained"
             color="secondary"
             onClick={async () => {
+              const db = await openDb()
               const collection = await db?.initCollection(col)
-              if (ipfs && db && collection) {
+              if (collection) {
                 await collection.drop()
               }
               await updateList()
