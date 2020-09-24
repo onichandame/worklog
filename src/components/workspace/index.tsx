@@ -4,7 +4,8 @@ import DocumentStore from 'orbit-db-docstore'
 import { Button, Grid, TextField } from '@material-ui/core'
 import { v1 as uuid } from 'uuid'
 
-import { Ipfs } from '../context'
+import { Ipfs } from '../../context'
+import { Remote } from './remote'
 
 declare module 'orbit-db-docstore' {
   export default interface DocumentStore<T> {
@@ -26,7 +27,6 @@ export const Workspace: FC = () => {
   const [collection, setCollection] = useState<DocumentStore<Log> | null>(null)
   const [colAddr, setColAddr] = useState<string>(``)
   const [updating, setUpdating] = useState(false)
-  const [remoteLogs, setRemoteLogs] = useState<any[]>([])
   const { ipfs, ipfsErr } = useContext(Ipfs)
   const openDb = useCallback(async () => {
     console.log(`opening db`)
@@ -56,9 +56,7 @@ export const Workspace: FC = () => {
   }, [setUpdating, setList, collection])
   const updateColAddr = useCallback(() => {
     if (collection) {
-      setColAddr(
-        `/orbitdb/${collection.address.root}/${collection.address.path}`
-      )
+      setColAddr(collection.address.toString())
       updateList()
     }
   }, [collection, updateList])
@@ -128,26 +126,7 @@ export const Workspace: FC = () => {
           </Button>
         </Grid>
         <Grid item>
-          {remoteLogs.map(log => (
-            <div key={uuid()}>{log}</div>
-          ))}
-        </Grid>
-        <Grid item>
-          <Button
-            type="button"
-            variant="contained"
-            onClick={async () => {
-              if (db) {
-                console.log(`opening remote store ${colAddr}`)
-                const store = await db.open(colAddr)
-                console.log(`store of type ${store.type} opened`)
-                setRemoteLogs(store.all)
-                console.log(`logs ${JSON.stringify(store.all)} found`)
-              }
-            }}
-          >
-            open from remote
-          </Button>
+          <Remote db={db} />
         </Grid>
       </Grid>
     </Grid>
