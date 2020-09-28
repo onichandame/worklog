@@ -100,6 +100,16 @@ export const Workspace: FC = () => {
         >
           update
         </Button>
+        <Button
+          type="button"
+          variant="contained"
+          color="secondary"
+          onClick={() => {
+            if (collection) collection.load().then(() => updateList())
+          }}
+        >
+          reload
+        </Button>
       </Grid>
       <Grid item>
         <form

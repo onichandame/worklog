@@ -23,11 +23,13 @@ export const Remote: FC<Props> = ({ db }) => {
               console.log(addr)
               if (db && addr) {
                 console.log(`opening remote store ${addr}`)
-                const store = await db.open(addr)
+                const store = await db.open(addr, { type: 'docstore' })
                 console.log(`store of type ${store.type} opened`)
                 setLogs(store.all)
                 console.log(`logs ${JSON.stringify(store.all)} found`)
               }
+            } catch (e) {
+              console.error(e)
             } finally {
               setOpening(false)
             }

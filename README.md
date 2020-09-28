@@ -1,44 +1,42 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Worklog
 
-## Available Scripts
+A personal logbook that requires no central server to synchronize between different devices.
 
-In the project directory, you can run:
+# Author
 
-### `yarn start`
+[onichandame](https://onichandame.com)
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+# Problems to Solve
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
+Much of the daily work is dealing with chores. Keeping a written track of all the tasks is essential to stay efficient. This tool is intended to solve the following issues.
 
-### `yarn test`
+1. Manage tasks
+2. Synchronize data between devices
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+As a personal project aiming at learning distributed app development, this tool is not intended to provide the following functions:
 
-### `yarn build`
+1. Permanent data storage and backup
+2. Collaboration
+3. Anything expected in a fully-functional scheduler(such as Google Calendar) but not expected in a physical logbook.
 
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
+A classical use case is:
 
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
+- Wake up in the morning. Check the worklog on the smartphone to see if anything needs to be done before going to work
+- Arrive at the office. Synchronize the worklog in the smartphone to the worklog in the computer. Modify the worklog during the working hours as needed
+- Visit a client after lunch. Synchronize the worklog in the computer to the smartphone. Add pending tasks to worklog on smartphone during the visit
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+The whole idea is to store personal data locally on the user's device and synchronize data in a p2p channel to avoid the need of any central server.
 
-### `yarn eject`
+# Design
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+The app should be compatible to at least desktop computers of any OS and Android smartphones. Hence browser-based webapp is the chosen approach.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+To store the data, IndexedDB can be utilized. To secure the data, it is assumed that the devices holding the data are trusted by the user. Hence no application-level authentication is required.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+The communication protocol should be based on p2p technology but the latency of a full synchronization should be low. Hence IPFS with some tweaks is the best choice.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## Architecture
 
-## Learn More
+### User Interface
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+The user is expected to
