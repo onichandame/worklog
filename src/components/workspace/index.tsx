@@ -1,30 +1,20 @@
 import React, { useCallback, useEffect, useContext, FC, useState } from 'react'
 import OrbitDb from 'orbit-db'
-import DocumentStore from 'orbit-db-docstore'
 import { Button, Grid, TextField } from '@material-ui/core'
 import { v1 as uuid } from 'uuid'
+import EventStore from 'orbit-db-eventstore'
 
 import { Ipfs } from '../../context'
 import { Remote } from './remote'
+import { Log, identifier } from './common'
 
-declare module 'orbit-db-docstore' {
-  export default interface DocumentStore<T> {
-    put(doc: T): Promise<string>
-  }
-}
-
-type Log = {
-  _id: string
-  log: string
-}
-
-const col = `worklogs`
+const col = identifier
 
 export const Workspace: FC = () => {
   const [log, setLog] = useState(``)
   const [list, setList] = useState<Log[]>([])
   const [db, setDb] = useState<OrbitDb | null>(null)
-  const [collection, setCollection] = useState<DocumentStore<Log> | null>(null)
+  const [collection, setCollection] = useState<EventStore<Log> | null>(null)
   const [colAddr, setColAddr] = useState<string>(``)
   const [updating, setUpdating] = useState(false)
   const { ipfs, ipfsErr } = useContext(Ipfs)
@@ -36,7 +26,7 @@ export const Workspace: FC = () => {
   const openCollection = useCallback(async () => {
     if (db) {
       console.log(`opening col`)
-      const c = await db.docs<Log>(col)
+      const c = await db.log<Log>(col)
       await c.load()
       if (db) setCollection(c)
       console.log(`opened col`)
@@ -47,7 +37,11 @@ export const Workspace: FC = () => {
       setUpdating(true)
       if (collection) {
         console.log(`finding docs`)
-        setList(collection.query(() => true))
+        const items = collection
+          .iterator()
+          .collect()
+          .map(e => e.payload.value)
+        setList(items || [])
         console.log(`found docs`)
       }
     } finally {
@@ -62,8 +56,9 @@ export const Workspace: FC = () => {
   }, [collection, updateList])
   const insertLog = useCallback(async () => {
     try {
-      console.log(`collection opened`)
-      if (collection) await collection.put({ _id: uuid(), log })
+      if (collection) {
+        await collection.add({ _id: uuid(), log })
+      }
       console.log(`inserted`)
     } catch (e) {
       console.error(`insert failed`)
@@ -72,9 +67,10 @@ export const Workspace: FC = () => {
   }, [collection, log])
   const clearCollection = useCallback(async () => {
     if (collection) {
-      await Promise.all(list.map(log => collection.del(log._id)))
+      await collection.drop()
+      await openCollection()
     }
-  }, [collection, list])
+  }, [collection, openCollection])
   useEffect(() => {
     openDb()
   }, [openDb])

@@ -2,6 +2,9 @@ import React, { FC, useState } from 'react'
 import OrbitDb from 'orbit-db'
 import { v1 as uuid } from 'uuid'
 import { Grid, TextField, Button } from '@material-ui/core'
+import EventStore from 'orbit-db-eventstore'
+
+import { Log, identifier } from './common'
 
 type Props = {
   db: OrbitDb | null
@@ -23,10 +26,30 @@ export const Remote: FC<Props> = ({ db }) => {
               console.log(addr)
               if (db && addr) {
                 console.log(`opening remote store ${addr}`)
-                const store = await db.open(addr, { type: 'docstore' })
+                const store = (await db.open(addr, {
+                  type: 'eventlog',
+                })) as EventStore<Log>
                 console.log(`store of type ${store.type} opened`)
-                setLogs(store.all)
-                console.log(`logs ${JSON.stringify(store.all)} found`)
+                console.log(
+                  `logs ${JSON.stringify(store.get(identifier))} found`
+                )
+                store.events.on('replicated', addr => {
+                  console.log(`db ${addr} replicated`)
+                })
+                store.events.on('load', addr => {
+                  console.log(`db ${addr} loading`)
+                })
+                store.events.on('ready', addr => {
+                  console.log(`db ${addr} ready`)
+                })
+                store.events.on('replicate', addr => {
+                  console.log(`db ${addr} replicating`)
+                })
+                const items = store
+                  .iterator()
+                  .collect()
+                  .map(e => e.payload.value)
+                setLogs(items || [])
               }
             } catch (e) {
               console.error(e)
