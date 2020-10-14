@@ -1,22 +1,32 @@
 import React, { useCallback, useEffect, useContext, FC, useState } from 'react'
 import OrbitDb from 'orbit-db'
+import DocumentStore from 'orbit-db-docstore'
 import { Button, Grid, TextField } from '@material-ui/core'
 import { v1 as uuid } from 'uuid'
-import DocStore from 'orbit-db-docstore'
 
-import { Ipfs } from '../../context'
-import { Remote } from './remote'
-import { Log, identifier } from './common'
+import { Ipfs } from '../context'
 
-const col = identifier
+declare module 'orbit-db-docstore' {
+  export default interface DocumentStore<T> {
+    put(doc: T): Promise<string>
+  }
+}
+
+type Log = {
+  _id: string
+  log: string
+}
+
+const col = `worklogs`
 
 export const Workspace: FC = () => {
   const [log, setLog] = useState(``)
   const [list, setList] = useState<Log[]>([])
   const [db, setDb] = useState<OrbitDb | null>(null)
-  const [collection, setCollection] = useState<DocStore<Log> | null>(null)
+  const [collection, setCollection] = useState<DocumentStore<Log> | null>(null)
   const [colAddr, setColAddr] = useState<string>(``)
   const [updating, setUpdating] = useState(false)
+  const [remoteLogs, setRemoteLogs] = useState<any[]>([])
   const { ipfs, ipfsErr } = useContext(Ipfs)
   const openDb = useCallback(async () => {
     console.log(`opening db`)
@@ -24,7 +34,7 @@ export const Workspace: FC = () => {
     console.log(`opened db`)
   }, [ipfs, ipfsErr])
   const openCollection = useCallback(async () => {
-    if (db && !collection) {
+    if (db) {
       console.log(`opening col`)
       const c = await db.docs<Log>(col)
       await c.load()
@@ -46,12 +56,15 @@ export const Workspace: FC = () => {
   }, [setUpdating, setList, collection])
   const updateColAddr = useCallback(() => {
     if (collection) {
-      setColAddr(collection.address.toString())
+      setColAddr(
+        `/orbitdb/${collection.address.root}/${collection.address.path}`
+      )
       updateList()
     }
   }, [collection, updateList])
   const insertLog = useCallback(async () => {
     try {
+      console.log(`collection opened`)
       if (collection) await collection.put({ _id: uuid(), log })
       console.log(`inserted`)
     } catch (e) {
@@ -61,10 +74,9 @@ export const Workspace: FC = () => {
   }, [collection, log])
   const clearCollection = useCallback(async () => {
     if (collection) {
-      await collection.drop()
-      await openCollection()
+      await Promise.all(list.map(log => collection.del(log._id)))
     }
-  }, [collection, openCollection])
+  }, [collection, list])
   useEffect(() => {
     openDb()
   }, [openDb])
@@ -89,16 +101,6 @@ export const Workspace: FC = () => {
           variant="contained"
         >
           update
-        </Button>
-        <Button
-          type="button"
-          variant="contained"
-          color="secondary"
-          onClick={() => {
-            if (collection) collection.load().then(() => updateList())
-          }}
-        >
-          reload
         </Button>
       </Grid>
       <Grid item>
@@ -126,7 +128,26 @@ export const Workspace: FC = () => {
           </Button>
         </Grid>
         <Grid item>
-          <Remote db={db} />
+          {remoteLogs.map(log => (
+            <div key={uuid()}>{log}</div>
+          ))}
+        </Grid>
+        <Grid item>
+          <Button
+            type="button"
+            variant="contained"
+            onClick={async () => {
+              if (db) {
+                console.log(`opening remote store ${colAddr}`)
+                const store = await db.open(colAddr)
+                console.log(`store of type ${store.type} opened`)
+                setRemoteLogs(store.all)
+                console.log(`logs ${JSON.stringify(store.all)} found`)
+              }
+            }}
+          >
+            open from remote
+          </Button>
         </Grid>
       </Grid>
     </Grid>
