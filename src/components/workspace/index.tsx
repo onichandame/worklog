@@ -31,7 +31,7 @@ export const Workspace: FC = () => {
       if (db) setCollection(c)
       console.log(`opened col`)
     }
-  }, [db])
+  }, [db, collection])
   const updateList = useCallback(async () => {
     try {
       setUpdating(true)
@@ -61,10 +61,9 @@ export const Workspace: FC = () => {
   }, [collection, log])
   const clearCollection = useCallback(async () => {
     if (collection) {
-      await collection.drop()
-      await openCollection()
+      await Promise.all(list.map(log => collection.del(log._id)))
     }
-  }, [collection, openCollection])
+  }, [collection, list])
   useEffect(() => {
     openDb()
   }, [openDb])
