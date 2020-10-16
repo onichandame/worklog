@@ -26,7 +26,8 @@ export const Remote: FC<Props> = ({ db }) => {
               setOpening(true)
               if (db && addr) {
                 console.log(`opening remote store ${addr}`)
-                const store = await db.docstore<Log>(addr)
+                const store = (await db.open(addr)) as DocStore<Log>
+                console.log(store.replicationStatus)
                 setStore(store)
                 console.log(`store of type ${store.type} opened`)
                 let logs = store.query(() => true)

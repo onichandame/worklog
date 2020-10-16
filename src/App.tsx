@@ -1,6 +1,7 @@
 import React, { FC, useState, useReducer } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import { useIpfs } from 'react-ipfs-hook'
+import { Helmet } from 'react-helmet'
 
 import { Ipfs, External, ExternalUrl } from './context'
 import { NavBar, Workspace } from './components'
@@ -24,6 +25,7 @@ const App: FC = () => {
       <External.Provider value={{ toggleExternal, external }}>
         <Ipfs.Provider value={{ ipfs, ipfsErr }}>
           <div className={styles.root}>
+            <Helmet title="Worklog" />
             <NavBar />
             {ipfsErr ? (
               ipfsErr.message
