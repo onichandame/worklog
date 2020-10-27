@@ -15,9 +15,9 @@ Much of the daily work is dealing with chores. Keeping a written track of all th
 
 As a personal project aiming at learning distributed app development, this tool is not intended to provide the following functions:
 
-1. Permanent data storage and backup
-2. Collaboration
-3. Anything expected in a fully-functional scheduler(such as Google Calendar) but not expected in a physical logbook.
+1. Permanent data storage and backup at the cloud side
+2. Collaboration between users
+3. Anything not expected in a physical logbook.
 
 A classical use case is:
 
@@ -33,10 +33,20 @@ The app should be compatible to at least desktop computers of any OS and Android
 
 To store the data, IndexedDB can be utilized. To secure the data, it is assumed that the devices holding the data are trusted by the user. Hence no application-level authentication is required.
 
-The communication protocol should be based on p2p technology but the latency of a full synchronization should be low. Hence IPFS with some tweaks is the best choice.
+The communication protocol should be based on p2p technology but the latency of a full synchronization should be low.
 
 ## Architecture
 
 ### User Interface
 
-The user is expected to
+The user will need to maintain 2 sections:
+
+1. To do list
+2. worklog of every day
+
+### Database
+
+The database should be functional and keep consistent data in the following conditions:
+
+1. different devices of the same user access/modify the data at the same time
+2. the data in one device is lost
