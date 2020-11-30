@@ -1,5 +1,8 @@
 import React, { FC, useContext } from 'react'
+import { makeStyles } from '@material-ui/core/styles'
+import { Menu } from '@material-ui/icons'
 import {
+  IconButton,
   TextField,
   Switch,
   AppBar,
@@ -9,13 +12,21 @@ import {
 
 import { External, ExternalUrl, Ipfs } from '../context'
 
+const useStyles = makeStyles(theme => ({
+  menuButton: { marginRight: theme.spacing(2) },
+}))
+
 export const NavBar: FC = () => {
+  const styles = useStyles()
   const { externalUrl, setExternalUrl } = useContext(ExternalUrl)
   const { external, toggleExternal } = useContext(External)
   const { ipfs, ipfsErr } = useContext(Ipfs)
   return (
     <AppBar position="static">
       <Toolbar>
+        <IconButton className={styles.menuButton} edge="start" color="inherit">
+          <Menu />
+        </IconButton>
         <Typography variant="h6" noWrap>
           Worklog
         </Typography>

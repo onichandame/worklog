@@ -1,9 +1,11 @@
 {
   "name": "worklog",
   "version": "0.0.0",
+  "homepage": ".",
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.11.0",
+    "@material-ui/icons": "^4.9.1",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.0.4",
     "@testing-library/user-event": "^12.1.6",
@@ -12,10 +14,14 @@
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",
     "lokijs": "^1.5.11",
+    "normalize.css": "^8.0.1",
+    "orbit-db": "^0.26.0",
+    "orbit-db-docstore": "^1.12.0",
     "peerjs": "^1.3.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-helmet": "^6.1.0",
+    "react-ipfs-hook": "^0.2.4",
     "react-scripts": "3.4.3",
     "typescript": "~4.0.3",
     "uuid": "^8.3.0"
@@ -43,6 +49,7 @@
   },
   "devDependencies": {
     "@types/lokijs": "^1.5.3",
+    "@types/orbit-db": "https://github.com/orbitdb/orbit-db-types.git",
     "@types/react-helmet": "^6.1.0",
     "@types/uuid": "^8.3.0"
   }
