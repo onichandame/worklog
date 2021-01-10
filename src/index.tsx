@@ -1,4 +1,5 @@
 import React from 'react'
+import { IpfsProvider } from '@onichandame/react-ipfs-hook'
 import ReactDOM from 'react-dom'
 import { CssBaseline } from '@material-ui/core'
 import 'normalize.css'
@@ -9,7 +10,9 @@ import * as serviceWorker from './serviceWorker'
 ReactDOM.render(
   <React.StrictMode>
     <CssBaseline />
-    <App />
+    <IpfsProvider>
+      <App />
+    </IpfsProvider>
   </React.StrictMode>,
   document.getElementById('root')
 )

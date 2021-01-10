@@ -1,10 +1,13 @@
-import React, { FC, useEffect } from 'react'
-import { useIpfs } from 'react-ipfs-hook'
+import React, { FC, useContext } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import {
   Menu,
+  SignalCellular0Bar,
+  SignalCellular1Bar,
+  SignalCellular2Bar,
+  SignalCellular3Bar,
   SignalCellular4Bar,
-  SignalCellularConnectedNoInternet0Bar,
+  SignalCellularOff,
 } from '@material-ui/icons'
 import {
   ListItemSecondaryAction,
@@ -19,8 +22,9 @@ import {
   Toolbar,
   Typography,
 } from '@material-ui/core'
+import { useIpfs } from '@onichandame/react-ipfs-hook'
 
-import { Ipfs } from '../context'
+import { PeerNum } from '../context'
 
 const drawerWidth = 240
 
@@ -39,59 +43,67 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
+const Signal: FC = () => {
+  const [, ipfsErr] = useIpfs()
+  const peerNum = useContext(PeerNum)
+  return ipfsErr ? (
+    <SignalCellularOff />
+  ) : peerNum < 16 ? (
+    <SignalCellular0Bar />
+  ) : peerNum < 32 ? (
+    <SignalCellular1Bar />
+  ) : peerNum < 64 ? (
+    <SignalCellular2Bar />
+  ) : peerNum < 128 ? (
+    <SignalCellular3Bar />
+  ) : (
+    <SignalCellular4Bar />
+  )
+}
+
 export const Layout: FC = ({ children }) => {
   const styles = useStyles()
-  const [ipfs, ipfsErr] = useIpfs({ external: false, opts: {} })
-  useEffect(() => {
-    if (ipfsErr) console.error(ipfsErr)
-  }, [ipfsErr])
   return (
-    <Ipfs.Provider value={{ ipfs, ipfsErr }}>
-      <div className={styles.root}>
-        <AppBar position="fixed" className={styles.appBar}>
-          <Toolbar>
-            <IconButton
-              className={styles.menuButton}
-              edge="start"
-              color="inherit"
-            >
-              <Menu />
-            </IconButton>
-            <Typography variant="h6" noWrap>
-              Worklog
-            </Typography>
-            <div style={{ flexGrow: 1 }} />
-          </Toolbar>
-        </AppBar>
-        <Drawer
-          className={styles.drawer}
-          classes={{ paper: styles.drawerPaper }}
-          variant="permanent"
-        >
-          <Toolbar />
-          <div className={styles.drawerContainer}>
-            <List>
-              <ListItem>
-                <ListItemIcon>
-                  {ipfs ? (
-                    <SignalCellular4Bar />
-                  ) : (
-                    <SignalCellularConnectedNoInternet0Bar />
-                  )}
-                </ListItemIcon>
-                <ListItemText primary="IPFS" />
-                <ListItemSecondaryAction>
-                  <Switch />
-                </ListItemSecondaryAction>
-              </ListItem>
-            </List>
-          </div>
-        </Drawer>
-        <main className={styles.main}>
-          <Toolbar />
-          {children}
-        </main>
-      </div>
-    </Ipfs.Provider>
+    <div className={styles.root}>
+      <AppBar position="fixed" className={styles.appBar}>
+        <Toolbar>
+          <IconButton
+            className={styles.menuButton}
+            edge="start"
+            color="inherit"
+          >
+            <Menu />
+          </IconButton>
+          <Typography variant="h6" noWrap>
+            Worklog
+          </Typography>
+          <div style={{ flexGrow: 1 }} />
+        </Toolbar>
+      </AppBar>
+      <Drawer
+        className={styles.drawer}
+        classes={{ paper: styles.drawerPaper }}
+        variant="permanent"
+      >
+        <Toolbar />
+        <div className={styles.drawerContainer}>
+          <List>
+            <ListItem>
+              <ListItemIcon>
+                <Signal />
+              </ListItemIcon>
+              <ListItemText primary="IPFS" />
+              <ListItemSecondaryAction>
+                <Switch />
+              </ListItemSecondaryAction>
+            </ListItem>
+          </List>
+        </div>
+      </Drawer>
+      <main className={styles.main}>
+        <Toolbar />
+        {children}
+      </main>
+    </div>
   )
 }

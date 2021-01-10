@@ -1,1 +1,3 @@
-export * from './ipfs'
+export * from './online'
+export * from './peers'
+export * from './peerNum'

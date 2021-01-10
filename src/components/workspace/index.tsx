@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect, useContext, FC, useState } from 'react'
+import React, { useCallback, useEffect, FC, useState } from 'react'
+import { useIpfs } from '@onichandame/react-ipfs-hook'
 import OrbitDb from 'orbit-db'
 import { Button, Grid, TextField } from '@material-ui/core'
 import { v1 as uuid } from 'uuid'
 import DocStore from 'orbit-db-docstore'
 
-import { Ipfs } from '../../context'
 import { Remote } from './remote'
 import { Log, identifier } from './common'
 
@@ -17,7 +17,7 @@ export const Workspace: FC = () => {
   const [collection, setCollection] = useState<DocStore<Log> | null>(null)
   const [colAddr, setColAddr] = useState<string>(``)
   const [updating, setUpdating] = useState(false)
-  const { ipfs, ipfsErr } = useContext(Ipfs)
+  const [ipfs, ipfsErr] = useIpfs()
   const openDb = useCallback(async () => {
     console.log(`opening db`)
     if (ipfs && !ipfsErr) setDb(await OrbitDb.createInstance(ipfs))
