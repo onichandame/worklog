@@ -1,4 +1,4 @@
-import React, { FC, useState, useContext } from 'react'
+import React, { FC } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import {
   Menu,
@@ -11,21 +11,18 @@ import {
 } from '@material-ui/icons'
 import {
   Badge,
-  ListItemSecondaryAction,
   ListItemIcon,
   ListItem,
   List,
   ListItemText,
   Drawer,
   IconButton,
-  Switch,
   AppBar,
   Toolbar,
   Typography,
 } from '@material-ui/core'
-import { useIpfs } from '@onichandame/react-ipfs-hook'
 
-import { PeerNum, Online } from '../context'
+import { PeerNum, Status } from '../context'
 
 const drawerWidth = 240
 
@@ -38,11 +35,11 @@ const useStyles = makeStyles(theme => ({
 }))
 
 const Signal: FC = () => {
-  const [, ipfsErr] = useIpfs()
   const peerNum = useContext(PeerNum)
+  const status = useContext(Status)
   return (
     <Badge badgeContent={peerNum}>
-      {ipfsErr ? (
+      {status !== `RUNNING` ? (
         <SignalCellularOff />
       ) : peerNum < 16 ? (
         <SignalCellular0Bar />
@@ -61,9 +58,6 @@ const Signal: FC = () => {
 
 export const NavBar: FC = () => {
   const styles = useStyles()
-  const [ipfs, ipfsErr] = useIpfs()
-  const online = useContext(Online)
-  const [loading, setLoading] = useState(false)
   return (
     <div>
       <AppBar position="fixed" className={styles.appBar}>
@@ -94,23 +88,6 @@ export const NavBar: FC = () => {
                 <Signal />
               </ListItemIcon>
               <ListItemText primary="IPFS" />
-              <ListItemSecondaryAction>
-                <Switch
-                  disabled={!!ipfsErr || loading}
-                  value={online}
-                  onChange={() => {
-                    if (!ipfsErr && ipfs) {
-                      if (online) {
-                        ipfs.stop().finally(() => setLoading(false))
-                        setLoading(true)
-                      } else {
-                        ipfs.start().finally(() => setLoading(false))
-                        setLoading(true)
-                      }
-                    }
-                  }}
-                />
-              </ListItemSecondaryAction>
             </ListItem>
           </List>
         </div>

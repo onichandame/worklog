@@ -10,7 +10,7 @@ import * as serviceWorker from './serviceWorker'
 ReactDOM.render(
   <React.StrictMode>
     <CssBaseline />
-    <IpfsProvider>
+    <IpfsProvider opts={{ host: `localhost`, protocol: `http`, port: 5001 }}>
       <App />
     </IpfsProvider>
   </React.StrictMode>,

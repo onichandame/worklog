@@ -1,61 +1,71 @@
-import React, { FC, useState, useEffect } from 'react'
+import React, { useCallback, ContextType, FC, useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet'
 import { useIpfs } from '@onichandame/react-ipfs-hook'
 import { Toolbar } from '@material-ui/core'
 
 import { NavBar, Workspace } from './components'
-import { Online, Peers, PeerNum } from './context'
+import { Id, Status, Peers, PeerNum } from './context'
 
 const App: FC = () => {
-  const [ipfs, ipfsErr] = useIpfs()
-  const [online, setOnline] = useState(false)
-  const [peers, setPeers] = useState<any[]>([])
+  const ipfsPromise = useIpfs()
+  const [status, setStatus] = useState<ContextType<typeof Status>>(`UNKNOWN`)
+  const [peers, setPeers] = useState<ContextType<typeof Peers>>([])
+  const [id, setId] = useState(``)
   const [peerNum, setPeerNum] = useState(0)
-  useEffect(() => {
-    const job = setInterval(() => {
-      if (!ipfsErr && ipfs && ipfs.isOnline) {
-        const statusNow = ipfs.isOnline()
-        if (statusNow !== online) setOnline(statusNow)
-      } else {
-        setOnline(false)
-      }
-    })
-    return () => clearInterval(job)
-  }, [ipfs, ipfsErr, online])
-  useEffect(() => {
-    const job = setInterval(() => {
-      if (online && ipfs && ipfs.swarm && ipfs.swarm.peers) {
-        ipfs.swarm.peers().then((prs: any[]) => {
-          setPeers(prs)
+  const checkStatus = useCallback(
+    (err?: Error) => {
+      ipfsPromise
+        .then(ipfs => {
+          if (!ipfs) {
+            if (status !== `UNKNOWN`) setStatus(`UNKNOWN`)
+          } else return ipfs.id()
         })
-      } else {
-        if (peers.length !== 0) setPeers([])
-      }
-    })
-    return () => clearInterval(job)
-  }, [ipfs, online, peers])
+        .then(() => status !== `RUNNING` && setStatus(`RUNNING`))
+        .catch((e: Error) => {
+          status !== `ERROR` && setStatus(`ERROR`)
+          throw err || e
+        })
+    },
+    [ipfsPromise, status]
+  )
+  useEffect(checkStatus, [checkStatus])
+  // update basic info every second
   useEffect(() => {
-    const job = setInterval(() => {
-      const peerNumNow = peers.length
-      if (peerNumNow !== peerNum) setPeerNum(peerNumNow)
-    })
-    return () => clearInterval(job)
-  }, [ipfsErr, peers, peerNum])
+    const jobs: ReturnType<typeof setInterval>[] = []
+    switch (status) {
+      case `RUNNING`:
+        ipfsPromise.then(ipfs => {
+          ipfs && ipfs.id && ipfs.id().then(val => setId(val.id))
+          ipfs &&
+            ipfs.swarm &&
+            ipfs.swarm.peers &&
+            ipfs.swarm.peers().then((prs: any[]) => setPeers(prs))
+        })
+    }
+    return () => jobs.forEach(job => clearInterval(job))
+  }, [ipfsPromise, status, checkStatus])
+  // update derived info
+  useEffect(() => {
+    const newPeerNum = peers.length
+    if (newPeerNum !== peerNum) setPeerNum(newPeerNum)
+  }, [peers, peerNum])
   return (
-    <Online.Provider value={online}>
-      <Peers.Provider value={peers}>
-        <PeerNum.Provider value={peerNum}>
-          <Helmet title="Worklog" />
-          <div style={{ display: `flex` }}>
-            <NavBar />
-            <main style={{ flexGrow: 1 }}>
-              <Toolbar />
-              <Workspace />
-            </main>
-          </div>
-        </PeerNum.Provider>
-      </Peers.Provider>
-    </Online.Provider>
+    <Id.Provider value={id}>
+      <Status.Provider value={status}>
+        <Peers.Provider value={peers}>
+          <PeerNum.Provider value={peerNum}>
+            <Helmet title="Worklog" />
+            <div style={{ display: `flex` }}>
+              <NavBar />
+              <main style={{ flexGrow: 1 }}>
+                <Toolbar />
+                <Workspace />
+              </main>
+            </div>
+          </PeerNum.Provider>
+        </Peers.Provider>
+      </Status.Provider>
+    </Id.Provider>
   )
 }
 
