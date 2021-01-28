@@ -1,18 +1,16 @@
 import React from 'react'
-import { IpfsProvider } from '@onichandame/react-ipfs-hook'
 import ReactDOM from 'react-dom'
-import { CssBaseline } from '@material-ui/core'
 import 'normalize.css'
 
-import App from './App'
+import { Wrapper } from './wrapper'
+import { App } from './app'
 import * as serviceWorker from './serviceWorker'
 
 ReactDOM.render(
   <React.StrictMode>
-    <CssBaseline />
-    <IpfsProvider opts={{ host: `localhost`, protocol: `http`, port: 5001 }}>
+    <Wrapper>
       <App />
-    </IpfsProvider>
+    </Wrapper>
   </React.StrictMode>,
   document.getElementById('root')
 )

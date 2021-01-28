@@ -1,4 +1,5 @@
-import React, { FC } from 'react'
+import React, { FC, useContext } from 'react'
+import { useIpfs } from '@onichandame/react-ipfs-hook'
 import { makeStyles } from '@material-ui/core/styles'
 import {
   Menu,
@@ -22,7 +23,7 @@ import {
   Typography,
 } from '@material-ui/core'
 
-import { PeerNum, Status } from '../context'
+import { PeerNum } from '../context'
 
 const drawerWidth = 240
 
@@ -35,11 +36,11 @@ const useStyles = makeStyles(theme => ({
 }))
 
 const Signal: FC = () => {
+  const { error } = useIpfs()
   const peerNum = useContext(PeerNum)
-  const status = useContext(Status)
   return (
     <Badge badgeContent={peerNum}>
-      {status !== `RUNNING` ? (
+      {!!error ? (
         <SignalCellularOff />
       ) : peerNum < 16 ? (
         <SignalCellular0Bar />

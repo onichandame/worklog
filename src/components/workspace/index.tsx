@@ -17,7 +17,7 @@ export const Workspace: FC = () => {
   const [collection, setCollection] = useState<DocStore<Log> | null>(null)
   const [colAddr, setColAddr] = useState<string>(``)
   const [updating, setUpdating] = useState(false)
-  const [ipfs, ipfsErr] = useIpfs()
+  const ipfsPromise = useIpfs()
   const openDb = useCallback(async () => {
     console.log(`opening db`)
     if (ipfs && !ipfsErr) setDb(await OrbitDb.createInstance(ipfs))
